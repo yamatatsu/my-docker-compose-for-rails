@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:5.7.16
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - db-data:/var/lib/mysql
+  # redis:
+  #   image: redis:3.0.5
+
+  web:
+    build: .
+    command: rails s -b 0.0.0.0 -p 3000
+    ports:
+      - 3000:3000
+    volumes:
+      - .:/myapp
+    environment:
+      - RAILS_ENV=development
+      - DATABASE_URL=mysql2://db
+      - REDIS_HOST=redis
+    depends_on:
+      - db
+      # - redis
+
+  wds:
+    image: wsshimapo_web
+    command: bin/webpack-dev-server --port 8080
+    # スマホでみたい場合は、上のcommandをコメントアウトして下のcommandを使って下さい。もっといい方法考えたいけど考えない
+    # command: bin/webpack --watch --progress --colors
+    ports:
+      - 8080:8080
+    volumes:
+      - .:/myapp
+    depends_on:
+      - web
+
+volumes:
+  db-data:
+    driver: local
